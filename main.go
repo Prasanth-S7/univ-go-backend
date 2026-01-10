@@ -38,6 +38,7 @@ func main() {
 
 	app.Get("/api/auth/profile/", handlers.ProfileHandler)
 	app.Get("/api/auth/allowed-login-status/", handlers.AllowedLoginStatusHandler)
+	app.Get("/api/student-courses/courses/available_courses/", handlers.AvailableCoursesHandler)
 
 	log.Fatal(app.Listen(":3000"))
 }
