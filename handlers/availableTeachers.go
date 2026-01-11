@@ -5,10 +5,10 @@ import (
 
 	"github.com/Prasanth-S7/univ-go-backend/db"
 	"github.com/Prasanth-S7/univ-go-backend/models"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
-func AvailableTeachersHandler(c fiber.Ctx) error {
+func AvailableTeachersHandler(c *fiber.Ctx) error {
 	course_id := c.Query("course_id")
 
 	if course_id == "" {

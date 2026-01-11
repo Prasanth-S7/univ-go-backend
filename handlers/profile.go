@@ -5,11 +5,11 @@ import (
 
 	"github.com/Prasanth-S7/univ-go-backend/db"
 	"github.com/Prasanth-S7/univ-go-backend/models"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func ProfileHandler(c fiber.Ctx) error {
+func ProfileHandler(c *fiber.Ctx) error {
 
 	userClaims, ok := c.Locals("user").(jwt.MapClaims)
 	if !ok {

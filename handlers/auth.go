@@ -9,15 +9,15 @@ import (
 	"github.com/Prasanth-S7/univ-go-backend/middlewares"
 	"github.com/Prasanth-S7/univ-go-backend/models"
 	"github.com/Prasanth-S7/univ-go-backend/utils"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func LoginHandler(c fiber.Ctx) error {
+func LoginHandler(c *fiber.Ctx) error {
 
 	var req LoginRequest
 
-	if err := c.Bind().Body(&req); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -153,7 +153,7 @@ func LoginHandler(c fiber.Ctx) error {
 	})
 }
 
-func AllowedLoginStatusHandler(c fiber.Ctx) error {
+func AllowedLoginStatusHandler(c *fiber.Ctx) error {
 
 	userClaims, ok := c.Locals("user").(jwt.MapClaims)
 	if !ok {

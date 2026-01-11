@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
-func DeleteCookie(c fiber.Ctx) {
+func DeleteCookie(c *fiber.Ctx) {
 	fmt.Println(os.Getenv("COOKIE_DOMAIN"))
 	c.Cookie(&fiber.Cookie{
 		Name:     "token",

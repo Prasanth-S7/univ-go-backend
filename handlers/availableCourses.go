@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"github.com/Prasanth-S7/univ-go-backend/db"
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AvailableCoursesHandler(c fiber.Ctx) error {
+func AvailableCoursesHandler(c *fiber.Ctx) error {
 	student_id := c.Locals("user").(jwt.MapClaims)["student_id"]
 
 	type CourseResult struct {

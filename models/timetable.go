@@ -22,11 +22,11 @@ func (TimetableMaster) TableName() string {
 }
 
 type Session struct {
-	ID        int64     `gorm:"primaryKey"`
-	Name      string    `gorm:"type:varchar(100);not null"`
-	StartTime time.Time `gorm:"type:time;not null"`
-	EndTime   time.Time `gorm:"type:time;not null"`
-	IsLabTime bool      `gorm:"not null"`
+	ID        int64  `gorm:"primaryKey"`
+	Name      string `gorm:"type:varchar(100);not null"`
+	StartTime string `gorm:"type:time;not null"`
+	EndTime   string `gorm:"type:time;not null"`
+	IsLabTime bool   `gorm:"not null"`
 }
 
 func (Session) TableName() string {
