@@ -11,7 +11,7 @@ volumes:
 
 services:
   postgres:
-    image: postgres
+    image: postgres:17
     container_name: univ-postgres
     environment:
       POSTGRES_USER: postgres
