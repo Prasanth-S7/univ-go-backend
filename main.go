@@ -24,15 +24,14 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	prom := fiberprometheus.New("univ-go-backend")
+	prom.RegisterAt(app, "/metrics")
+	app.Use(prom.Middleware)
+
 	app.Get("/", func(c *fiber.Ctx) error {
 		log.Println("Health check successful")
 		return c.SendString("Health check successful")
 	})
-
-	prometheus := fiberprometheus.New("my-service-name")
-	prometheus.RegisterAt(app, "/metrics")
-	prometheus.SetIgnoreStatusCodes([]int{401, 403, 404}) // Optional: Skip metrics for these status codes
-	app.Use(prometheus.Middleware)
 
 	app.Post("/api/auth/login/", handlers.LoginHandler)
 
