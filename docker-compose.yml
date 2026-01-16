@@ -40,6 +40,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: univ-prometheus
+    # network_mode: host
     ports:
       - "9090:9090"
     volumes:
@@ -59,5 +60,6 @@ services:
       - grafana-data:/var/lib/grafana
     networks:
       - univ-network
+    # network_mode: host
     depends_on:
       - prometheus

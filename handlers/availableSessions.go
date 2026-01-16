@@ -106,7 +106,7 @@ func AvailableSessionsHandler(c *fiber.Ctx) error {
 		2. Subtracting the number of students from the student count
 
 		So if 5 subjects is there, the number of db queries it has to make is 5
-		In 1 sec if 200 requests are made, it has to make 1000 db queries
+		In 1 sec if 200 requests are made, it has to make 1000 db queries (5 * 25000 * 200 row scans)
 	*/
 
 	getSlotAvailability := func(id string, studentCount int, batch string) int {
