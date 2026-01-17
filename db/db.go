@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -23,6 +24,24 @@ func Connect() {
 	)
 
 	var err2 error
+
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		PrepareStmt: false, // PgBouncer-safe
+	})
+	if err != nil {
+		log.Fatal("failed to connect database:", err)
+	}
+
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+
+	fmt.Println("Connected via PgBouncer")
 
 	DB, err2 = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err2 != nil {
