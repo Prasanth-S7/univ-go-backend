@@ -9,6 +9,31 @@ import (
 func GetStatusHandler(c *fiber.Ctx) error {
 	student_id := c.Locals("user").(jwt.MapClaims)["student_id"]
 
+	// fetch student booked courses from timetable along with course_id
+	bookedCoursesQuery := `
+		SELECT DISTINCT tc.course_id_id as course_id
+		FROM "timetableMaster_studenttimetable" st
+		JOIN "teacherCourse_teachercourse" tc ON st.teacher_course_id_id = tc.id
+		WHERE st.student_id_id = ?
+	`
+
+	type BookedCourse struct {
+		CourseID int64 `db:"course_id"`
+	}
+
+	var bookedCourses []BookedCourse
+	if err := db.DB.Raw(bookedCoursesQuery, student_id).Scan(&bookedCourses).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Error while fetching student Timetables",
+		})
+	}
+
+	// create a map of booked course IDs
+	bookedCourseMap := make(map[int64]bool)
+	for _, bc := range bookedCourses {
+		bookedCourseMap[bc.CourseID] = true
+	}
+
 	query := `
 		SELECT 
 			c.id,
@@ -37,20 +62,27 @@ func GetStatusHandler(c *fiber.Ctx) error {
 
 	enrichedResults := make([]fiber.Map, 0, len(results))
 
+	allSelected := true
+
 	for _, result := range results {
+		// Check if this course is in the booked courses map
+		isSelected := bookedCourseMap[result.ID]
+		if !isSelected {
+			allSelected = false
+		}
 
 		enrichedResult := fiber.Map{
 			"course_id":   result.ID,
 			"course_code": result.CourseCode,
 			"course_name": result.CourseName,
-			"selected":    true,
+			"selected":    isSelected,
 			"is_do_more":  false,
 		}
 		enrichedResults = append(enrichedResults, enrichedResult)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"all_selected": true,
+		"all_selected": allSelected,
 		"courses":      enrichedResults,
 	})
 }
