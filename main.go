@@ -49,14 +49,15 @@ func main() {
 		return c.SendString("Health check successful")
 	})
 
+	app.Options("/*", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
 	app.Post("/api/auth/login/", handlers.LoginHandler)
 	app.Post("/api/auth/logout/", handlers.LogoutHandler)
 
 	app.Use(middlewares.JWTMiddleware())
 
-	app.Options("/*", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusNoContent)
-	})
 	app.Get("/api/auth/profile/", handlers.ProfileHandler)
 	app.Get("/api/auth/allowed-login-status/", handlers.AllowedLoginStatusHandler)
 	app.Get("/api/student-courses/courses/available_courses/", handlers.AvailableCoursesHandler)
