@@ -100,11 +100,19 @@ func LoginHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// if user.Password != req.Password {
-	// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-	// 		"error": "Invalid password",
-	// 	})
-	// }
+	isValid, errr := utils.VerifyDjangoPassword(req.Password, user.Password)
+	if errr != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Password verification failed",
+		})
+	}
+
+	if !isValid {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"detail": "Invalid password",
+			"code":   "invalid_credentials",
+		})
+	}
 
 	//check if jwt secret key is present
 
