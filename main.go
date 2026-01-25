@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/Prasanth-S7/univ-go-backend/db"
 	"github.com/Prasanth-S7/univ-go-backend/handlers"
@@ -22,27 +23,28 @@ func main() {
 
 	app := fiber.New()
 
+	// CORS Configuration - Fix the origins to include your actual frontend
 	app.Use(cors.New(cors.Config{
-		AllowOriginsFunc: func(origin string) bool {
-			allowedOrigins := []string{
-				"http://localhost:5173",
-				"http://localhost:3000",
-				"https://univ-go-backend.vercel.app",
-				"https://univ-go-frontend.vercel.app",
-			}
-
-			for _, allowed := range allowedOrigins {
-				if origin == allowed {
-					return true
-				}
-			}
-			return false
-		},
-
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization",
+		AllowOrigins:     "http://localhost:5173,http://localhost:3000,https://univ-go-backend.vercel.app,https://go-api.alien501.in",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowCredentials: true,
-		ExposeHeaders:    "Content-Length",
+		ExposeHeaders:    "Set-Cookie",
+	}))
+
+	// Or use dynamic origin checking (recommended):
+	app.Use(cors.New(cors.Config{
+		AllowOriginsFunc: func(origin string) bool {
+			// Allow all Vercel apps and your custom domain
+			return strings.HasSuffix(origin, "vercel.app") ||
+				strings.HasSuffix(origin, "alien501.in") ||
+				strings.Contains(origin, "localhost:") ||
+				strings.Contains(origin, "127.0.0.1:")
+		},
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowCredentials: true,
+		ExposeHeaders:    "Set-Cookie",
 	}))
 
 	prom := fiberprometheus.New("univ-go-backend")
@@ -50,7 +52,6 @@ func main() {
 	app.Use(prom.Middleware)
 
 	// logger config
-
 	file, err := os.OpenFile("logs.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
@@ -65,24 +66,29 @@ func main() {
 		return c.SendString("Health check successful")
 	})
 
+	// Handle OPTIONS requests for CORS preflight
 	app.Options("/*", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	})
 
+	// Public routes (no JWT required)
 	app.Post("/api/auth/login/", handlers.LoginHandler)
 	app.Post("/api/auth/logout/", handlers.LogoutHandler)
 
-	app.Use(middlewares.JWTMiddleware())
+	// Apply JWT middleware for protected routes
+	protected := app.Group("/api")
+	protected.Use(middlewares.JWTMiddleware())
 
-	app.Get("/api/auth/profile/", handlers.ProfileHandler)
-	app.Get("/api/auth/allowed-login-status/", handlers.AllowedLoginStatusHandler)
-	app.Get("/api/student-courses/courses/available_courses/", handlers.AvailableCoursesHandler)
-	app.Get("/api/student-courses/courses/available_teachers/", handlers.AvailableTeachersHandler)
-	app.Get("/api/timetable/student/status/", handlers.GetStatusHandler)
-	app.Get("/api/timetable/student/sessions/", handlers.GetSessionsHandler)
-	app.Get("/api/timetable/sessions/:teacher_course_id/", handlers.AvailableSessionsHandler)
-	app.Get("/api/timetable/status/", handlers.StatusHandler)
-	app.Post("/api/timetable/student/add/bulk/", handlers.AddBulkHandler)
+	// Protected routes
+	protected.Get("/auth/profile/", handlers.ProfileHandler)
+	protected.Get("/auth/allowed-login-status/", handlers.AllowedLoginStatusHandler)
+	protected.Get("/student-courses/courses/available_courses/", handlers.AvailableCoursesHandler)
+	protected.Get("/student-courses/courses/available_teachers/", handlers.AvailableTeachersHandler)
+	protected.Get("/timetable/student/status/", handlers.GetStatusHandler)
+	protected.Get("/timetable/student/sessions/", handlers.GetSessionsHandler)
+	protected.Get("/timetable/sessions/:teacher_course_id/", handlers.AvailableSessionsHandler)
+	protected.Get("/timetable/status/", handlers.StatusHandler)
+	protected.Post("/timetable/student/add/bulk/", handlers.AddBulkHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
