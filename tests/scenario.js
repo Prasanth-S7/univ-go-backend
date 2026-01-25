@@ -60,24 +60,22 @@ export const rampingLoadOptions = {
 export const spikeTestOptions = {
     scenarios: {
         spike_test: {
-            executor: 'ramping-vus',
-            startVUs: 0,
+            executor: 'ramping-arrival-rate',
+            startRate: 100,        // Start with 100 RPS
+            timeUnit: '1s',
+            preAllocatedVUs: 1000,
+            maxVUs: 1500,
             stages: [
-                { duration: '30s', target: 100 },   // Normal load
-                { duration: '10s', target: 300 },  // SPIKE!
-                { duration: '1m', target: 300 },   // Hold spike
-                { duration: '1m', target: 400 },   // Hold spike
-                { duration: '1m', target: 500 },   // Hold spike
-                { duration: '1m', target: 600 },   // Hold spike
-                { duration: '10s', target: 100 },   // Drop back
-                { duration: '1m', target: 100 },    // Recover
-                { duration: '30s', target: 0 },     // Ramp down
+                { target: 500, duration: '10s' },   // Ramp to 500 RPS
+                { target: 1000, duration: '5s' },   // Ramp to 1000 RPS
+                { target: 1000, duration: '30s' },  // Hold at 1000 RPS for 30s
+                { target: 0, duration: '10s' },     // Ramp down
             ],
         },
     },
     thresholds: {
-        http_req_duration: ['p(95)<1000'], // More lenient during spike
-        http_req_failed: ['rate<0.1'],     // Up to 10% errors acceptable
+        http_req_duration: ['p(95)<1000'],
+        http_req_failed: ['rate<0.1'],
     },
 };
 
@@ -94,6 +92,8 @@ export default function () {
 
     // LOGIN
     const loginRes = http.post(
+        // 'https://api-teachers.rajalakshmi.org/api/auth/login/',
+        // 'http://13.232.26.143/api/auth/login/',
         'http://localhost:3000/api/auth/login/',
         JSON.stringify({
             email: email,
@@ -107,6 +107,8 @@ export default function () {
         }
     );
 
+    console.log(`login status: ${loginRes.status}`);
+
     if (loginRes.status !== 200) {
         console.error(`Login failed: ${loginRes.status}`);
         return; // Skip rest if login fails
@@ -116,6 +118,8 @@ export default function () {
 
     // PROFILE
     const profileRes = http.get(
+        // 'https://api-teachers.rajalakshmi.org/api/auth/profile/',
+        // 'http://13.232.26.143/api/auth/profile/',
         'http://localhost:3000/api/auth/profile/',
         {
             headers: {
@@ -126,8 +130,12 @@ export default function () {
         }
     );
 
+    console.log(`profile status: ${profileRes.status}`);
+
     // SESSIONS
     const sessions = http.get(
+        // 'https://api-teachers.rajalakshmi.org/api/timetable/student/sessions/',
+        // 'http://13.232.26.143/api/timetable/student/sessions/',
         'http://localhost:3000/api/timetable/student/sessions/',
         {
             headers: {
@@ -137,6 +145,8 @@ export default function () {
             tags: { name: 'Sessions' },
         }
     );
+
+    console.log(`session status: ${sessions.status}`);
 
     // Realistic user think time (remove for max load)
     sleep(1);

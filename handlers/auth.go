@@ -27,7 +27,8 @@ func LoginHandler(c *fiber.Ctx) error {
 
 	if err := db.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "User not found",
+			"detail": "No account found with this email. If you think it's a mistake, please contact the admin.",
+			"code":   "user_not_found",
 		})
 	}
 
@@ -216,6 +217,23 @@ func AllowedLoginStatusHandler(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{
 		"is_login_allowed": true,
+	})
+}
+
+func LogoutHandler(c *fiber.Ctx) error {
+	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+		Secure:   true,
+		Domain:   cookieDomain,
+		SameSite: "Lax",
+	})
+
+	return c.JSON(fiber.Map{
+		"detail": "Logout successful",
 	})
 }
 

@@ -29,3 +29,24 @@ type StudentCoursePreference struct {
 func (StudentCoursePreference) TableName() string {
 	return "studentCourse_studentcoursepreference"
 }
+
+type StudentCourseGroup struct {
+	ID        int64  `gorm:"primaryKey"`
+	GroupName string `gorm:"column:group_name;type:varchar(100);not null"`
+	StdYear   int    `gorm:"column:std_year;not null"`
+	DeptID    int64  `gorm:"column:dept_id;not null"`
+}
+
+func (StudentCourseGroup) TableName() string {
+	return "studentCourse_studentcoursegroup"
+}
+
+type StudentCourseGroupCourses struct {
+	ID       int64 `gorm:"primaryKey"`
+	GroupID  int64 `gorm:"column:group_id;not null"`
+	CourseID int64 `gorm:"column:course_id;not null"`
+}
+
+func (StudentCourseGroupCourses) TableName() string {
+	return "studentCourse_studentcoursegroupcourses"
+}
