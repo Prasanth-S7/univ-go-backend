@@ -18,7 +18,7 @@ import (
 func main() {
 
 	db.Connect()
-	db.InitRedis()
+	// db.InitRedis()
 	workers.StartWorker()
 
 	app := fiber.New()
