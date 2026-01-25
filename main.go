@@ -66,11 +66,11 @@ func main() {
 	})
 
 	// Public routes (no JWT required)
-	app.Post("/api/auth/login/", handlers.LoginHandler)
-	app.Post("/api/auth/logout/", handlers.LogoutHandler)
+	app.Post("go/api/auth/login/", handlers.LoginHandler)
+	app.Post("go/api/auth/logout/", handlers.LogoutHandler)
 
 	// Apply JWT middleware for protected routes
-	protected := app.Group("/api")
+	protected := app.Group("go/api")
 	protected.Use(middlewares.JWTMiddleware())
 
 	// Protected routes
