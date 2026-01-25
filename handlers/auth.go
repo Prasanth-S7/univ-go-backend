@@ -109,8 +109,16 @@ func LoginHandler(c *fiber.Ctx) error {
 	}
 
 	if len(allowedLoginDepartments) == 0 {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "You are not allowed to login",
+		var deptName string
+		if student.DeptID != nil {
+			var dept models.Department
+			if err := db.DB.First(&dept, *student.DeptID).Error; err == nil {
+				deptName = dept.DeptName
+			}
+		}
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"detail": fmt.Sprintf("Login for year: %d or Dept: %s is restricted at this time, try again later!", student.Year, deptName),
+			"code":   "login_not_allowed",
 		})
 	}
 
