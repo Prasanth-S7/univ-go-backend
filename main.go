@@ -30,7 +30,7 @@ func main() {
 				return true
 			}
 			// Allow your production domains
-			if strings.HasSuffix(origin, ".alien501.in") || origin == "https://alien501.in" {
+			if strings.HasSuffix(origin, ".rajalakshmi.org") || origin == "https://students.rajalakshmi.org" {
 				return true
 			}
 			return false
