@@ -30,9 +30,9 @@ func main() {
 				return true
 			}
 			// Allow your production domains
-			if strings.HasSuffix(origin, ".rajalakshmi.org") || origin == "https://students.rajalakshmi.org" {
-				return true
-			}
+			// if strings.HasSuffix(origin, ".rajalakshmi.org") || origin == "https://students.rajalakshmi.org" {
+			// 	return true
+			// }
 			return false
 		},
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
