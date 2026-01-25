@@ -128,6 +128,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	// Only use secure cookies in production or strict domains
 	isSecure := false
 	sameSite := "Lax"
+	fmt.Println(os.Getenv("GO_ENV"))
 	if os.Getenv("GO_ENV") == "production" {
 		isSecure = true
 		sameSite = "None"

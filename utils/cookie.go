@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -9,14 +8,21 @@ import (
 )
 
 func DeleteCookie(c *fiber.Ctx) {
-	fmt.Println(os.Getenv("COOKIE_DOMAIN"))
+	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	isSecure := false
+	sameSite := "Lax"
+	if os.Getenv("GO_ENV") == "production" {
+		isSecure = true
+		sameSite = "None"
+	}
+
 	c.Cookie(&fiber.Cookie{
 		Name:     "token",
 		Value:    "",
-		SameSite: "Lax",
+		Expires:  time.Now().Add(-time.Hour),
 		HTTPOnly: true,
-		Secure:   true,
-		Domain:   "localhost",
-		Expires:  time.Now().Add(-time.Hour * 24 * 30),
+		Secure:   isSecure,
+		Domain:   cookieDomain,
+		SameSite: sameSite,
 	})
 }
