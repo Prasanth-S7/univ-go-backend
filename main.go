@@ -23,15 +23,6 @@ func main() {
 
 	app := fiber.New()
 
-	// CORS Configuration - Fix the origins to include your actual frontend
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5173,http://localhost:3000,https://std.alien501.in",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
-		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
-		AllowCredentials: true,
-		ExposeHeaders:    "Set-Cookie",
-	}))
-
 	// Or use dynamic origin checking (recommended):
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: func(origin string) bool {
