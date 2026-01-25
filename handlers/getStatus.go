@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/Prasanth-S7/univ-go-backend/db"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -14,7 +16,7 @@ func GetStatusHandler(c *fiber.Ctx) error {
 		SELECT DISTINCT tc.course_id_id as course_id
 		FROM "timetableMaster_studenttimetable" st
 		JOIN "teacherCourse_teachercourse" tc ON st.teacher_course_id_id = tc.id
-		WHERE st.student_id_id = ?
+		WHERE st.student_id_id = ? AND st.status = 'confirmed'
 	`
 
 	type BookedCourse struct {
@@ -63,6 +65,11 @@ func GetStatusHandler(c *fiber.Ctx) error {
 	enrichedResults := make([]fiber.Map, 0, len(results))
 
 	allSelected := true
+	fmt.Println(bookedCourses)
+	fmt.Println(results)
+	if len(bookedCourses) < len(results) {
+		allSelected = false
+	}
 
 	for _, result := range results {
 		// Check if this course is in the booked courses map
