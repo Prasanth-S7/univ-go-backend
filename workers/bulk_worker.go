@@ -170,8 +170,8 @@ func processTask(ctx context.Context, payload string) {
 		existingCourseMap[selection.TeacherCourseID] = true
 
 		bookingsToInsert = append(bookingsToInsert, models.StudentTimetable{
-			Status:            "confirmed",
-			RejectionReason:   "",
+			Status:            "rejected",
+			RejectionReason:   "sorry vro",
 			IsMailSent:        false,
 			Batch:             selection.Batch,
 			IsInternalBooking: false,

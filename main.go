@@ -64,6 +64,7 @@ func main() {
 	app.Get("/api/timetable/student/status/", handlers.GetStatusHandler)
 	app.Get("/api/timetable/student/sessions/", handlers.GetSessionsHandler)
 	app.Get("/api/timetable/sessions/:teacher_course_id/", handlers.AvailableSessionsHandler)
+	app.Get("/api/timetable/status/", handlers.StatusHandler)
 	app.Post("/api/timetable/student/add/bulk/", handlers.AddBulkHandler)
 
 	port := os.Getenv("PORT")

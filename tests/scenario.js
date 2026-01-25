@@ -94,7 +94,8 @@ export default function () {
     const loginRes = http.post(
         // 'https://api-teachers.rajalakshmi.org/api/auth/login/',
         // 'http://13.232.26.143/api/auth/login/',
-        'http://localhost:3000/api/auth/login/',
+        // 'http://localhost:3000/api/auth/login/',
+        'http://3.110.31.149:4500/api/auth/login/',
         JSON.stringify({
             email: email,
             password: 'random',
@@ -120,7 +121,8 @@ export default function () {
     const profileRes = http.get(
         // 'https://api-teachers.rajalakshmi.org/api/auth/profile/',
         // 'http://13.232.26.143/api/auth/profile/',
-        'http://localhost:3000/api/auth/profile/',
+        // 'http://localhost:3000/api/auth/profile/',
+        'http://3.110.31.149:4500/api/auth/profile/',
         {
             headers: {
                 'Cookie': `token=${token}`,
@@ -136,7 +138,8 @@ export default function () {
     const sessions = http.get(
         // 'https://api-teachers.rajalakshmi.org/api/timetable/student/sessions/',
         // 'http://13.232.26.143/api/timetable/student/sessions/',
-        'http://localhost:3000/api/timetable/student/sessions/',
+        // 'http://localhost:3000/api/timetable/student/sessions/',
+        'http://3.110.31.149:4500/api/timetable/student/sessions/',
         {
             headers: {
                 'Cookie': `token=${token}`,
