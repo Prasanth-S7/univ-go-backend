@@ -127,14 +127,16 @@ func LoginHandler(c *fiber.Ctx) error {
 	cookieDomain := os.Getenv("COOKIE_DOMAIN")
 	// Only use secure cookies in production or strict domains
 	isSecure := false
+	sameSite := "Lax"
 	if os.Getenv("GO_ENV") == "production" {
 		isSecure = true
+		sameSite = "None"
 	}
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "token",
 		Value:    jwtToken,
-		SameSite: "Lax",
+		SameSite: sameSite,
 		HTTPOnly: true,
 		Secure:   isSecure,
 		Domain:   cookieDomain,
@@ -228,8 +230,10 @@ func AllowedLoginStatusHandler(c *fiber.Ctx) error {
 func LogoutHandler(c *fiber.Ctx) error {
 	cookieDomain := os.Getenv("COOKIE_DOMAIN")
 	isSecure := false
+	sameSite := "Lax"
 	if os.Getenv("GO_ENV") == "production" {
 		isSecure = true
+		sameSite = "None"
 	}
 
 	c.Cookie(&fiber.Cookie{
@@ -239,7 +243,7 @@ func LogoutHandler(c *fiber.Ctx) error {
 		HTTPOnly: true,
 		Secure:   isSecure,
 		Domain:   cookieDomain,
-		SameSite: "Lax",
+		SameSite: sameSite,
 	})
 
 	return c.JSON(fiber.Map{
