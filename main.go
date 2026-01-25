@@ -25,7 +25,7 @@ func main() {
 
 	// CORS Configuration - Fix the origins to include your actual frontend
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5173,http://localhost:3000,https://univ-go-backend.vercel.app,https://go-api.alien501.in,https://std.alien501.in",
+		AllowOrigins:     "http://localhost:5173,http://localhost:3000,https://std.alien501.in",
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowCredentials: true,
@@ -36,10 +36,7 @@ func main() {
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: func(origin string) bool {
 			// Allow all Vercel apps and your custom domain
-			return strings.HasSuffix(origin, "vercel.app") ||
-				strings.HasSuffix(origin, "alien501.in") ||
-				strings.Contains(origin, "localhost:") ||
-				strings.Contains(origin, "127.0.0.1:")
+			return strings.HasSuffix(origin, "alien501.in") || strings.Contains(origin, "localhost:") || strings.Contains(origin, "127.0.0.1:")
 		},
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
