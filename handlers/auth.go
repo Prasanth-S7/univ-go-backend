@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -30,6 +29,20 @@ func LoginHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"detail": "No account found with this email. If you think it's a mistake, please contact the admin.",
 			"code":   "user_not_found",
+		})
+	}
+
+	isValid, errr := utils.VerifyDjangoPassword(req.Password, user.Password)
+	if errr != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Password verification failed",
+		})
+	}
+
+	if !isValid {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"detail": "Invalid password",
+			"code":   "invalid_credentials",
 		})
 	}
 
@@ -98,22 +111,6 @@ func LoginHandler(c *fiber.Ctx) error {
 	if len(allowedLoginDepartments) == 0 {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "You are not allowed to login",
-		})
-	}
-
-	log.Println("Health check successful")
-
-	isValid, errr := utils.VerifyDjangoPassword(req.Password, user.Password)
-	if errr != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Password verification failed",
-		})
-	}
-
-	if !isValid {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"detail": "Invalid password",
-			"code":   "invalid_credentials",
 		})
 	}
 
