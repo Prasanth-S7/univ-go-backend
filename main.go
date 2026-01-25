@@ -8,7 +8,6 @@ import (
 	"github.com/Prasanth-S7/univ-go-backend/db"
 	"github.com/Prasanth-S7/univ-go-backend/handlers"
 	"github.com/Prasanth-S7/univ-go-backend/middlewares"
-	"github.com/Prasanth-S7/univ-go-backend/workers"
 	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -19,7 +18,7 @@ func main() {
 
 	db.Connect()
 	// db.InitRedis()
-	workers.StartWorker()
+	// workers.StartWorker()
 
 	app := fiber.New()
 
