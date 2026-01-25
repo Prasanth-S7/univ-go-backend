@@ -23,10 +23,26 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5173,http://localhost:3000,https://univ-go-backend.vercel.app",
+		AllowOriginsFunc: func(origin string) bool {
+			allowedOrigins := []string{
+				"http://localhost:5173",
+				"http://localhost:3000",
+				"https://univ-go-backend.vercel.app",
+				"https://univ-go-frontend.vercel.app",
+			}
+
+			for _, allowed := range allowedOrigins {
+				if origin == allowed {
+					return true
+				}
+			}
+			return false
+		},
+
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowCredentials: true,
+		ExposeHeaders:    "Content-Length",
 	}))
 
 	prom := fiberprometheus.New("univ-go-backend")
