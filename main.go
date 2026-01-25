@@ -23,14 +23,21 @@ func main() {
 
 	app := fiber.New()
 
-	// Or use dynamic origin checking (recommended):
+	// CORS Configuration - USE ONLY ONE
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: func(origin string) bool {
-			// Allow all Vercel apps and your custom domain
-			return strings.HasSuffix(origin, "alien501.in") || strings.Contains(origin, "localhost:") || strings.Contains(origin, "127.0.0.1:")
+			// Allow localhost for development
+			if strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") {
+				return true
+			}
+			// Allow your production domains
+			if strings.HasSuffix(origin, ".alien501.in") || origin == "https://alien501.in" {
+				return true
+			}
+			return false
 		},
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
-		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS,PATCH",
 		AllowCredentials: true,
 		ExposeHeaders:    "Set-Cookie",
 	}))
