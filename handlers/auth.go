@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -99,6 +100,8 @@ func LoginHandler(c *fiber.Ctx) error {
 			"error": "You are not allowed to login",
 		})
 	}
+
+	log.Println("Health check successful")
 
 	isValid, errr := utils.VerifyDjangoPassword(req.Password, user.Password)
 	if errr != nil {
