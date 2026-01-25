@@ -66,5 +66,11 @@ func main() {
 	app.Get("/api/timetable/sessions/:teacher_course_id/", handlers.AvailableSessionsHandler)
 	app.Post("/api/timetable/student/add/bulk/", handlers.AddBulkHandler)
 
-	log.Fatal(app.Listen("0.0.0.0:3000"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000" // fallback for local dev
+	}
+
+	log.Printf("Starting server on port %s", port)
+	log.Fatal(app.Listen("0.0.0.0:" + port))
 }
