@@ -59,19 +59,19 @@ func Connect() {
 
 	// MaxOpenConns: For 8vCPU, a good starting point is 80-100 connections
 	// RDS Proxy can handle thousands of connections and multiplex them
-	sqlDB.SetMaxOpenConns(2000)
+	sqlDB.SetMaxOpenConns(100)
 
 	// MaxIdleConns: Keep ~50% of max open connections idle
 	// This reduces connection establishment overhead
-	sqlDB.SetMaxIdleConns(500)
+	sqlDB.SetMaxIdleConns(50)
 
 	// ConnMaxLifetime: RDS Proxy recommends shorter lifetimes
 	// 5-15 minutes is optimal to prevent stale connections
-	sqlDB.SetConnMaxLifetime(10 * time.Minute)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	// ConnMaxIdleTime: Close idle connections after this duration
 	// Helps RDS Proxy manage its connection pool efficiently
-	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(2 * time.Minute)
 
 	// Test the connection
 	if err := sqlDB.Ping(); err != nil {
