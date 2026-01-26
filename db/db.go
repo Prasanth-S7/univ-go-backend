@@ -38,7 +38,7 @@ func Connect() {
 
 	// Configure GORM with appropriate settings for RDS Proxy
 	gormConfig := &gorm.Config{
-		PrepareStmt: true,                                  // RDS Proxy supports prepared statements
+		PrepareStmt: false,                                 // RDS Proxy supports prepared statements
 		Logger:      logger.Default.LogMode(logger.Silent), // Adjust as needed
 	}
 
@@ -59,11 +59,11 @@ func Connect() {
 
 	// MaxOpenConns: For 8vCPU, a good starting point is 80-100 connections
 	// RDS Proxy can handle thousands of connections and multiplex them
-	sqlDB.SetMaxOpenConns(80)
+	sqlDB.SetMaxOpenConns(2000)
 
 	// MaxIdleConns: Keep ~50% of max open connections idle
 	// This reduces connection establishment overhead
-	sqlDB.SetMaxIdleConns(40)
+	sqlDB.SetMaxIdleConns(500)
 
 	// ConnMaxLifetime: RDS Proxy recommends shorter lifetimes
 	// 5-15 minutes is optimal to prevent stale connections
