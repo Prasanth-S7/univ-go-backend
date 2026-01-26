@@ -79,4 +79,59 @@ func Connect() {
 	}
 
 	log.Println("Successfully connected to Aurora via RDS Proxy")
+
+	// Print initial connection stats
+	PrintDBStats()
+
+	// Start background monitoring
+	go MonitorDBStats()
+}
+
+// PrintDBStats prints current database connection pool statistics
+func PrintDBStats() {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Println("Error getting DB instance:", err)
+		return
+	}
+
+	stats := sqlDB.Stats()
+	log.Printf("DB Stats - Open: %d, InUse: %d, Idle: %d, WaitCount: %d, WaitDuration: %s\n",
+		stats.OpenConnections,
+		stats.InUse,
+		stats.Idle,
+		stats.WaitCount,
+		stats.WaitDuration)
+}
+
+// MonitorDBStats monitors database connection pool statistics every 30 seconds
+func MonitorDBStats() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		PrintDBStats()
+	}
+}
+
+// GetDBStats returns database connection pool statistics as a map
+func GetDBStats() map[string]interface{} {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return map[string]interface{}{
+			"error": err.Error(),
+		}
+	}
+
+	stats := sqlDB.Stats()
+	return map[string]interface{}{
+		"open_connections":     stats.OpenConnections,
+		"in_use":               stats.InUse,
+		"idle":                 stats.Idle,
+		"wait_count":           stats.WaitCount,
+		"wait_duration":        stats.WaitDuration.String(),
+		"max_open_connections": stats.MaxOpenConnections,
+		"max_idle_closed":      stats.MaxIdleClosed,
+		"max_lifetime_closed":  stats.MaxLifetimeClosed,
+	}
 }

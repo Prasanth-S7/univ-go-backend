@@ -35,10 +35,10 @@ func main() {
 			// }
 			return false
 		},
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-CSRF-Token",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,x-csrftoken,X-CSRF-Token",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS,PATCH",
 		AllowCredentials: true,
-		ExposeHeaders:    "Set-Cookie",
+		ExposeHeaders:    "Set-Cookie,Authorization",
 	}))
 
 	prom := fiberprometheus.New("univ-go-backend")
@@ -63,6 +63,11 @@ func main() {
 	// Handle OPTIONS requests for CORS preflight
 	app.Options("/*", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	app.Get("/db-stats", func(c *fiber.Ctx) error {
+		stats := db.GetDBStats()
+		return c.JSON(stats)
 	})
 
 	// Public routes (no JWT required)
