@@ -50,7 +50,7 @@ func LoginHandler(c *fiber.Ctx) error {
 
 	var blockedStudentList []models.BlockedStudent
 
-	if err := db.DB.Where("email =?", user.Email).Find(&blockedStudentList).Error; err != nil {
+	if err := db.DB.Where("email = ?", user.Email).Find(&blockedStudentList).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch blocked student list",
 		})
@@ -58,7 +58,8 @@ func LoginHandler(c *fiber.Ctx) error {
 
 	if len(blockedStudentList) > 0 {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "You are blocked",
+			"detail": "Your account has been blocked. Please contact the admin.",
+			"code":   "account_blocked",
 		})
 	}
 
@@ -72,8 +73,64 @@ func LoginHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	//check if allowed login years
+	// Check if email is in allowed login emails list
+	var allowedEmailConfigs []models.StudentAccessConfig
+	if err := db.DB.Where("allowed_login_emails @> ?", fmt.Sprintf(`["%s"]`, user.Email)).Find(&allowedEmailConfigs).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to verify email whitelist",
+		})
+	}
 
+	// If email whitelist exists and user's email is in it, allow login immediately
+	if len(allowedEmailConfigs) > 0 {
+		// Email is whitelisted - skip year and department checks, proceed to login
+		jwtKey := os.Getenv("JWT_KEY")
+		if jwtKey == "" {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Internal Server Error: JWT Key not found",
+			})
+		}
+
+		var jwtToken string
+		var err error
+		if jwtToken, err = middlewares.EncodeJWT(user.Email, user.FirstName, user.LastName, user.UUID.String(), student.ID, jwtKey); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Could not login",
+			})
+		}
+
+		// Set cookie
+		cookieDomain := os.Getenv("COOKIE_DOMAIN")
+		isSecure := false
+		sameSite := "Lax"
+		if os.Getenv("GO_ENV") == "production" {
+			isSecure = true
+			sameSite = "None"
+		}
+
+		c.Cookie(&fiber.Cookie{
+			Name:     "token",
+			Value:    jwtToken,
+			SameSite: sameSite,
+			HTTPOnly: true,
+			Secure:   isSecure,
+			Domain:   cookieDomain,
+			Expires:  time.Now().Add(time.Hour * 24 * 30),
+		})
+
+		return c.JSON(fiber.Map{
+			"id":         user.Email,
+			"first_name": user.FirstName,
+			"last_name":  user.LastName,
+			"gender":     user.Gender,
+			"user_type":  user.UserType,
+			"detail":     "Login successful!",
+		})
+	}
+
+	// If not in email whitelist, proceed with normal year and department checks
+
+	//check if allowed login years
 	var allowedLoginYears []models.StudentAccessConfig
 
 	if err := db.DB.Where("allowed_login_years @> ?", fmt.Sprintf("[%d]", student.Year)).Find(&allowedLoginYears).Error; err != nil {
@@ -141,10 +198,8 @@ func LoginHandler(c *fiber.Ctx) error {
 
 	// Set cookie
 	cookieDomain := os.Getenv("COOKIE_DOMAIN")
-	// Only use secure cookies in production or strict domains
 	isSecure := false
 	sameSite := "Lax"
-	fmt.Println(os.Getenv("GO_ENV"))
 	if os.Getenv("GO_ENV") == "production" {
 		isSecure = true
 		sameSite = "None"
@@ -158,14 +213,6 @@ func LoginHandler(c *fiber.Ctx) error {
 		Secure:   isSecure,
 		Domain:   cookieDomain,
 		Expires:  time.Now().Add(time.Hour * 24 * 30),
-	})
-
-	c.Locals("user", fiber.Map{
-		"id":         user.Email,
-		"first_name": user.FirstName,
-		"last_name":  user.LastName,
-		"gender":     user.Gender,
-		"user_type":  user.UserType,
 	})
 
 	return c.JSON(fiber.Map{

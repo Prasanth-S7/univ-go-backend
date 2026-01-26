@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -16,10 +17,10 @@ var DB *gorm.DB
 func Connect() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("No .env file found, using environment variables")
 	}
 
-	sslMode := "require" // default = safe
+	sslMode := "require" // AWS RDS requires SSL in production
 
 	if os.Getenv("GO_ENV") == "development" {
 		sslMode = "disable"
@@ -27,7 +28,7 @@ func Connect() {
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		os.Getenv("DB_HOST"),
+		os.Getenv("DB_HOST"), // This should be your RDS Proxy endpoint
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
@@ -35,29 +36,47 @@ func Connect() {
 		sslMode,
 	)
 
-	var err2 error
-
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		PrepareStmt: false, // PgBouncer-safe
-	})
-	if err != nil {
-		log.Fatal("failed to connect database:", err)
+	// Configure GORM with appropriate settings for RDS Proxy
+	gormConfig := &gorm.Config{
+		PrepareStmt: true,                                  // RDS Proxy supports prepared statements
+		Logger:      logger.Default.LogMode(logger.Silent), // Adjust as needed
 	}
 
+	// Open connection
+	DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+
+	// Get underlying SQL DB for connection pool configuration
 	sqlDB, err := DB.DB()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to get database instance:", err)
 	}
 
-	sqlDB.SetMaxOpenConns(50)
-	sqlDB.SetMaxIdleConns(25)
-	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+	// Connection Pool Configuration for 8vCPU machine with RDS Proxy
+	// RDS Proxy handles connection pooling, so we optimize client-side pool
 
-	fmt.Println("Connected via PgBouncer")
+	// MaxOpenConns: For 8vCPU, a good starting point is 80-100 connections
+	// RDS Proxy can handle thousands of connections and multiplex them
+	sqlDB.SetMaxOpenConns(80)
 
-	DB, err2 = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err2 != nil {
-		log.Fatal("failed to connect database")
+	// MaxIdleConns: Keep ~50% of max open connections idle
+	// This reduces connection establishment overhead
+	sqlDB.SetMaxIdleConns(40)
+
+	// ConnMaxLifetime: RDS Proxy recommends shorter lifetimes
+	// 5-15 minutes is optimal to prevent stale connections
+	sqlDB.SetConnMaxLifetime(10 * time.Minute)
+
+	// ConnMaxIdleTime: Close idle connections after this duration
+	// Helps RDS Proxy manage its connection pool efficiently
+	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
+
+	// Test the connection
+	if err := sqlDB.Ping(); err != nil {
+		log.Fatal("Failed to ping database:", err)
 	}
-	fmt.Println("Connection Opened to Database")
+
+	log.Println("Successfully connected to Aurora via RDS Proxy")
 }

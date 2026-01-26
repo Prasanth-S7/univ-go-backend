@@ -36,3 +36,13 @@ type StudentAccessConfigAllowedLoginDept struct {
 func (StudentAccessConfigAllowedLoginDept) TableName() string {
 	return "adminConfig_studentaccessconfig_allowed_login_departments"
 }
+
+type StudentAccessConfigAllowedLoginEmail struct {
+	ID                    int64  `gorm:"primaryKey"`
+	StudentAccessConfigID int64  `gorm:"column:studentaccessconfig_id;not null"`
+	Email                 string `gorm:"type:varchar(254);not null"`
+}
+
+func (StudentAccessConfigAllowedLoginEmail) TableName() string {
+	return "adminConfig_studentaccessconfig_allowed_login_emails"
+}
