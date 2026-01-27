@@ -236,10 +236,26 @@ func AllowedLoginStatusHandler(c *fiber.Ctx) error {
 	}
 
 	student_id, ok := userClaims["student_id"]
+	email, ok := userClaims["id"]
+
 	if !ok {
 		utils.DeleteCookie(c)
+		fmt.Println("reaches here")
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized",
+		})
+	}
+
+	var allowedEmailConfigs []models.StudentAccessConfig
+	if err := db.DB.Where("allowed_login_emails @> ?", fmt.Sprintf(`["%s"]`, email)).Find(&allowedEmailConfigs).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to verify email whitelist",
+		})
+	}
+
+	if len(allowedEmailConfigs) > 0 {
+		return c.JSON(fiber.Map{
+			"is_login_allowed": true,
 		})
 	}
 
