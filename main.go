@@ -22,7 +22,6 @@ func main() {
 
 	app := fiber.New()
 
-	// CORS Configuration - USE ONLY ONE
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: func(origin string) bool {
 			// Allow localhost for development
@@ -60,7 +59,6 @@ func main() {
 		return c.SendString("Health check successful")
 	})
 
-	// Handle OPTIONS requests for CORS preflight
 	app.Options("/*", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	})
@@ -70,15 +68,12 @@ func main() {
 		return c.JSON(stats)
 	})
 
-	// Public routes (no JWT required)
 	app.Post("go/api/auth/login/", handlers.LoginHandler)
 	app.Post("go/api/auth/logout/", handlers.LogoutHandler)
 
-	// Apply JWT middleware for protected routes
 	protected := app.Group("go/api")
 	protected.Use(middlewares.JWTMiddleware())
 
-	// Protected routes
 	protected.Get("/auth/profile/", handlers.ProfileHandler)
 	protected.Get("/auth/allowed-login-status/", handlers.AllowedLoginStatusHandler)
 	protected.Get("/student-courses/courses/available_courses/", handlers.AvailableCoursesHandler)
@@ -91,7 +86,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000" // fallback for local dev
+		port = "3000"
 	}
 
 	log.Printf("Starting server on port %s", port)
