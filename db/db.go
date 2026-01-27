@@ -3,9 +3,9 @@ package db
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
+	"github.com/Prasanth-S7/univ-go-backend/utils"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -20,74 +20,52 @@ func Connect() {
 		log.Println("No .env file found, using environment variables")
 	}
 
-	sslMode := "require" // AWS RDS requires SSL in production
+	sslMode := "require"
 
-	if os.Getenv("GO_ENV") == "development" {
+	if utils.GetEnv("GO_ENV", "development") == "development" {
 		sslMode = "disable"
 	}
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		os.Getenv("DB_HOST"), // This should be your RDS Proxy endpoint
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
+		utils.GetEnv("DB_HOST", "localhost"),
+		utils.GetEnv("DB_PORT", "5432"),
+		utils.GetEnv("DB_USER", "postgres"),
+		utils.GetEnv("DB_PASSWORD", "postgres"),
+		utils.GetEnv("DB_NAME", "univapptwopointone"),
 		sslMode,
 	)
 
-	// Configure GORM with appropriate settings for RDS Proxy
 	gormConfig := &gorm.Config{
-		PrepareStmt: false,                                 // RDS Proxy supports prepared statements
-		Logger:      logger.Default.LogMode(logger.Silent), // Adjust as needed
+		PrepareStmt: false,
+		Logger:      logger.Default.LogMode(logger.Silent),
 	}
 
-	// Open connection
 	DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Get underlying SQL DB for connection pool configuration
 	sqlDB, err := DB.DB()
 	if err != nil {
 		log.Fatal("Failed to get database instance:", err)
 	}
 
-	// Connection Pool Configuration for 8vCPU machine with RDS Proxy
-	// RDS Proxy handles connection pooling, so we optimize client-side pool
+	sqlDB.SetMaxOpenConns(utils.AtoiEnv("DB_MAX_OPEN_CONNS", 10))
+	sqlDB.SetMaxIdleConns(utils.AtoiEnv("DB_MAX_IDLE_CONNS", 10))
+	sqlDB.SetConnMaxLifetime(time.Duration(utils.AtoiEnv("DB_MAX_LIFETIME", 1)) * time.Minute)
+	sqlDB.SetConnMaxIdleTime(time.Duration(utils.AtoiEnv("DB_MAX_IDLE_TIME", 1)) * time.Minute)
 
-	// MaxOpenConns: For 8vCPU, a good starting point is 80-100 connections
-	// RDS Proxy can handle thousands of connections and multiplex them
-	sqlDB.SetMaxOpenConns(100)
-
-	// MaxIdleConns: Keep ~50% of max open connections idle
-	// This reduces connection establishment overhead
-	sqlDB.SetMaxIdleConns(50)
-
-	// ConnMaxLifetime: RDS Proxy recommends shorter lifetimes
-	// 5-15 minutes is optimal to prevent stale connections
-	sqlDB.SetConnMaxLifetime(5 * time.Minute)
-
-	// ConnMaxIdleTime: Close idle connections after this duration
-	// Helps RDS Proxy manage its connection pool efficiently
-	sqlDB.SetConnMaxIdleTime(2 * time.Minute)
-
-	// Test the connection
 	if err := sqlDB.Ping(); err != nil {
 		log.Fatal("Failed to ping database:", err)
 	}
 
-	log.Println("Successfully connected to Aurora via RDS Proxy")
+	log.Println("Successfully connected to the Database")
 
-	// Print initial connection stats
 	PrintDBStats()
-
-	// Start background monitoring
-	go MonitorDBStats()
+	go MonitorDBStats() // for monitoring the db connection stats
 }
 
-// PrintDBStats prints current database connection pool statistics
 func PrintDBStats() {
 	sqlDB, err := DB.DB()
 	if err != nil {
@@ -104,7 +82,6 @@ func PrintDBStats() {
 		stats.WaitDuration)
 }
 
-// MonitorDBStats monitors database connection pool statistics every 30 seconds
 func MonitorDBStats() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
@@ -114,7 +91,6 @@ func MonitorDBStats() {
 	}
 }
 
-// GetDBStats returns database connection pool statistics as a map
 func GetDBStats() map[string]interface{} {
 	sqlDB, err := DB.DB()
 	if err != nil {
