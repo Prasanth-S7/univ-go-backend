@@ -84,7 +84,7 @@ func (h *Handler) LoginHandler(c *fiber.Ctx) error {
 	// If email whitelist exists and user's email is in it, allow login immediately
 	if len(allowedEmailConfigs) > 0 {
 		// Email is whitelisted - skip year and department checks, proceed to login
-		jwtKey := os.Getenv("JWT_KEY")
+		jwtKey := h.Cfg.JwtKey
 		if jwtKey == "" {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Internal Server Error: JWT Key not found",
@@ -100,23 +100,7 @@ func (h *Handler) LoginHandler(c *fiber.Ctx) error {
 		}
 
 		// Set cookie
-		cookieDomain := os.Getenv("COOKIE_DOMAIN")
-		isSecure := false
-		sameSite := "Lax"
-		if os.Getenv("GO_ENV") == "production" {
-			isSecure = true
-			sameSite = "None"
-		}
-
-		c.Cookie(&fiber.Cookie{
-			Name:     "token",
-			Value:    jwtToken,
-			SameSite: sameSite,
-			HTTPOnly: true,
-			Secure:   isSecure,
-			Domain:   cookieDomain,
-			Expires:  time.Now().Add(time.Hour * 24 * 30),
-		})
+		h.setAuthCookie(c, jwtToken)
 
 		return c.JSON(fiber.Map{
 			"id":         user.Email,
@@ -197,23 +181,7 @@ func (h *Handler) LoginHandler(c *fiber.Ctx) error {
 	}
 
 	// Set cookie
-	cookieDomain := os.Getenv("COOKIE_DOMAIN")
-	isSecure := false
-	sameSite := "Lax"
-	if os.Getenv("GO_ENV") == "production" {
-		isSecure = true
-		sameSite = "None"
-	}
-
-	c.Cookie(&fiber.Cookie{
-		Name:     "token",
-		Value:    jwtToken,
-		SameSite: sameSite,
-		HTTPOnly: true,
-		Secure:   isSecure,
-		Domain:   cookieDomain,
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
-	})
+	h.setAuthCookie(c, jwtToken)
 
 	return c.JSON(fiber.Map{
 		"id":         user.Email,
@@ -229,7 +197,7 @@ func (h *Handler) AllowedLoginStatusHandler(c *fiber.Ctx) error {
 
 	userClaims, ok := c.Locals("user").(jwt.MapClaims)
 	if !ok {
-		utils.DeleteCookie(c)
+		h.DeleteCookie(c)
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized",
 		})
@@ -239,7 +207,7 @@ func (h *Handler) AllowedLoginStatusHandler(c *fiber.Ctx) error {
 	email, ok := userClaims["id"]
 
 	if !ok {
-		utils.DeleteCookie(c)
+		h.DeleteCookie(c)
 		fmt.Println("reaches here")
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized",
@@ -261,7 +229,7 @@ func (h *Handler) AllowedLoginStatusHandler(c *fiber.Ctx) error {
 
 	var student models.Student
 	if err := db.DB.Where("id = ?", student_id).First(&student).Error; err != nil {
-		utils.DeleteCookie(c)
+		h.DeleteCookie(c)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -270,14 +238,14 @@ func (h *Handler) AllowedLoginStatusHandler(c *fiber.Ctx) error {
 	var allowedLoginYears []models.StudentAccessConfig
 
 	if err := db.DB.Where("allowed_login_years @> ?", fmt.Sprintf("[%d]", student.Year)).Find(&allowedLoginYears).Error; err != nil {
-		utils.DeleteCookie(c)
+		h.DeleteCookie(c)
 		return c.JSON(fiber.Map{
 			"is_login_allowed": false,
 		})
 	}
 
 	if len(allowedLoginYears) == 0 {
-		utils.DeleteCookie(c)
+		h.DeleteCookie(c)
 		return c.JSON(fiber.Map{
 			"is_login_allowed": false,
 		})
@@ -289,7 +257,7 @@ func (h *Handler) AllowedLoginStatusHandler(c *fiber.Ctx) error {
 
 	if student.DeptID != nil {
 		if err := db.DB.Where("department_id = ?", *student.DeptID).Find(&allowedLoginDepartments).Error; err != nil {
-			utils.DeleteCookie(c)
+			h.DeleteCookie(c)
 			return c.JSON(fiber.Map{
 				"is_login_allowed": false,
 			})
@@ -297,7 +265,7 @@ func (h *Handler) AllowedLoginStatusHandler(c *fiber.Ctx) error {
 	}
 
 	if len(allowedLoginDepartments) == 0 {
-		utils.DeleteCookie(c)
+		h.DeleteCookie(c)
 		return c.JSON(fiber.Map{
 			"is_login_allowed": false,
 		})
@@ -308,10 +276,41 @@ func (h *Handler) AllowedLoginStatusHandler(c *fiber.Ctx) error {
 }
 
 func (h *Handler) LogoutHandler(c *fiber.Ctx) error {
-	cookieDomain := os.Getenv("COOKIE_DOMAIN")
+	h.DeleteCookie(c)
+	return c.JSON(fiber.Map{
+		"detail": "Logout successful",
+	})
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (h *Handler) setAuthCookie(c *fiber.Ctx, token string) {
+	isProd := h.Cfg.GoEnv == "production"
+
+	sameSite := "Lax"
+	if isProd {
+		sameSite = "None"
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    token,
+		Domain:   h.Cfg.CookieDomain,
+		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		HTTPOnly: true,
+		Secure:   isProd,
+		SameSite: sameSite,
+	})
+}
+
+func (h *Handler) DeleteCookie(c *fiber.Ctx) {
+	cookieDomain := h.Cfg.CookieDomain
 	isSecure := false
 	sameSite := "Lax"
-	if os.Getenv("GO_ENV") == "production" {
+	if h.Cfg.GoEnv == "production" {
 		isSecure = true
 		sameSite = "None"
 	}
@@ -325,13 +324,4 @@ func (h *Handler) LogoutHandler(c *fiber.Ctx) error {
 		Domain:   cookieDomain,
 		SameSite: sameSite,
 	})
-
-	return c.JSON(fiber.Map{
-		"detail": "Logout successful",
-	})
-}
-
-type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
 }
