@@ -17,7 +17,7 @@ func Connect(cfg *utils.Config) {
 
 	sslMode := "require"
 
-	if cfg.GoEnv == "developement" {
+	if cfg.GoEnv == "development" {
 		sslMode = "disable"
 	}
 
@@ -36,7 +36,8 @@ func Connect(cfg *utils.Config) {
 		Logger:      logger.Default.LogMode(logger.Silent),
 	}
 
-	DB, err := gorm.Open(postgres.Open(dsn), gormConfig)
+	var err error
+	DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
