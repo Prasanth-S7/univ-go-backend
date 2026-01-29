@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GetStatusHandler(c *fiber.Ctx) error {
+func (h *Handler) GetStatusHandler(c *fiber.Ctx) error {
 	student_id := c.Locals("user").(jwt.MapClaims)["student_id"]
 
 	// fetch student booked courses from timetable along with course_id
@@ -37,7 +37,7 @@ func GetStatusHandler(c *fiber.Ctx) error {
 	}
 
 	query := `
-		SELECT 
+		SELECT
 			c.id,
 			cm.course_id as course_code,
 			cm.course_name,

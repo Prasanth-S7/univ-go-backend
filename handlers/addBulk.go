@@ -28,7 +28,7 @@ type EnqueueTask struct {
 	Selections []BulkSelection `json:"selections"`
 }
 
-func AddBulkHandler(c *fiber.Ctx) error {
+func (h *Handler) AddBulkHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(jwt.MapClaims)
 	studentID := int64(user["student_id"].(float64))
 	userID := fmt.Sprintf("%d", studentID)

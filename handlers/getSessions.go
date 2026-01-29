@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GetSessionsHandler(c *fiber.Ctx) error {
+func (h *Handler) GetSessionsHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(jwt.MapClaims)
 
 	studentIDObj, ok := user["student_id"]

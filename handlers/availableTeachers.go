@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func AvailableTeachersHandler(c *fiber.Ctx) error {
+func (h *Handler) AvailableTeachersHandler(c *fiber.Ctx) error {
 	course_id := c.Query("course_id")
 
 	if course_id == "" {

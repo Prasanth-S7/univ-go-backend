@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func ProfileHandler(c *fiber.Ctx) error {
+func (h *Handler) ProfileHandler(c *fiber.Ctx) error {
 
 	userClaims, ok := c.Locals("user").(jwt.MapClaims)
 	if !ok {

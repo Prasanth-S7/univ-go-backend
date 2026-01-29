@@ -13,7 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func LoginHandler(c *fiber.Ctx) error {
+func (h *Handler) LoginHandler(c *fiber.Ctx) error {
 
 	var req LoginRequest
 
@@ -225,7 +225,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	})
 }
 
-func AllowedLoginStatusHandler(c *fiber.Ctx) error {
+func (h *Handler) AllowedLoginStatusHandler(c *fiber.Ctx) error {
 
 	userClaims, ok := c.Locals("user").(jwt.MapClaims)
 	if !ok {
@@ -307,7 +307,7 @@ func AllowedLoginStatusHandler(c *fiber.Ctx) error {
 	})
 }
 
-func LogoutHandler(c *fiber.Ctx) error {
+func (h *Handler) LogoutHandler(c *fiber.Ctx) error {
 	cookieDomain := os.Getenv("COOKIE_DOMAIN")
 	isSecure := false
 	sameSite := "Lax"

@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AvailableCoursesHandler(c *fiber.Ctx) error {
+func (h *Handler) AvailableCoursesHandler(c *fiber.Ctx) error {
 	student_id := c.Locals("user").(jwt.MapClaims)["student_id"]
 
 	type CourseResult struct {
@@ -22,7 +22,7 @@ func AvailableCoursesHandler(c *fiber.Ctx) error {
 	var results []CourseResult
 
 	query := `
-		SELECT 
+		SELECT
 			c.id,
 			cm.course_id as course_code,
 			cm.course_name,

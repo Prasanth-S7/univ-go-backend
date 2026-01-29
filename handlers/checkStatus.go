@@ -26,7 +26,7 @@ type StudentTimetableDetail struct {
 	TeacherName     string `json:"teacher_name,omitempty"`
 }
 
-func StatusHandler(c *fiber.Ctx) error {
+func (h *Handler) StatusHandler(c *fiber.Ctx) error {
 	user := c.Locals("user").(jwt.MapClaims)
 	studentID := int64(user["student_id"].(float64))
 	userID := fmt.Sprintf("%d", studentID)

@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func AvailableSessionsHandler(c *fiber.Ctx) error {
+func (h *Handler) AvailableSessionsHandler(c *fiber.Ctx) error {
 	teacher_course_id := c.Params("teacher_course_id")
 	if teacher_course_id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Session ID (Teacher Course ID) is required"})

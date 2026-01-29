@@ -23,7 +23,9 @@ func main() {
 		log.Fatalf("failed to load configuration: %v", err)
 	}
 
-	// db.Connect()
+	h := handlers.NewHandler(cfg)
+
+	// db.Connect(cfg)
 	// db.InitRedis()
 	// workers.StartWorker()
 
@@ -75,21 +77,21 @@ func main() {
 		return c.JSON(stats)
 	})
 
-	app.Post("go/api/auth/login/", handlers.LoginHandler)
-	app.Post("go/api/auth/logout/", handlers.LogoutHandler)
+	app.Post("go/api/auth/login/", h.LoginHandler)
+	app.Post("go/api/auth/logout/", h.LogoutHandler)
 
 	protected := app.Group("go/api")
 	protected.Use(middlewares.JWTMiddleware())
 
-	protected.Get("/auth/profile/", handlers.ProfileHandler)
-	protected.Get("/auth/allowed-login-status/", handlers.AllowedLoginStatusHandler)
-	protected.Get("/student-courses/courses/available_courses/", handlers.AvailableCoursesHandler)
-	protected.Get("/student-courses/courses/available_teachers/", handlers.AvailableTeachersHandler)
-	protected.Get("/timetable/student/status/", handlers.GetStatusHandler)
-	protected.Get("/timetable/student/sessions/", handlers.GetSessionsHandler)
-	protected.Get("/timetable/sessions/:teacher_course_id/", handlers.AvailableSessionsHandler)
-	protected.Get("/timetable/status/", handlers.StatusHandler)
-	protected.Post("/timetable/student/add/bulk/", handlers.AddBulkHandler)
+	protected.Get("/auth/profile/", h.ProfileHandler)
+	protected.Get("/auth/allowed-login-status/", h.AllowedLoginStatusHandler)
+	protected.Get("/student-courses/courses/available_courses/", h.AvailableCoursesHandler)
+	protected.Get("/student-courses/courses/available_teachers/", h.AvailableTeachersHandler)
+	protected.Get("/timetable/student/status/", h.GetStatusHandler)
+	protected.Get("/timetable/student/sessions/", h.GetSessionsHandler)
+	protected.Get("/timetable/sessions/:teacher_course_id/", h.AvailableSessionsHandler)
+	protected.Get("/timetable/status/", h.StatusHandler)
+	protected.Post("/timetable/student/add/bulk/", h.AddBulkHandler)
 
 	log.Printf("Starting server on port %s", cfg.Port)
 	log.Fatal(app.Listen("0.0.0.0:" + cfg.Port))
