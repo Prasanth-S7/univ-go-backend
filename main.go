@@ -8,6 +8,7 @@ import (
 	"github.com/Prasanth-S7/univ-go-backend/db"
 	"github.com/Prasanth-S7/univ-go-backend/handlers"
 	"github.com/Prasanth-S7/univ-go-backend/middlewares"
+	"github.com/Prasanth-S7/univ-go-backend/utils"
 	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -16,7 +17,13 @@ import (
 
 func main() {
 
-	db.Connect()
+	cfg, err := utils.LoadFromEnv()
+
+	if err != nil {
+		log.Fatalf("failed to load configuration: %v", err)
+	}
+
+	// db.Connect()
 	// db.InitRedis()
 	// workers.StartWorker()
 
@@ -84,11 +91,6 @@ func main() {
 	protected.Get("/timetable/status/", handlers.StatusHandler)
 	protected.Post("/timetable/student/add/bulk/", handlers.AddBulkHandler)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
-
-	log.Printf("Starting server on port %s", port)
-	log.Fatal(app.Listen("0.0.0.0:" + port))
+	log.Printf("Starting server on port %s", cfg.Port)
+	log.Fatal(app.Listen("0.0.0.0:" + cfg.Port))
 }

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Prasanth-S7/univ-go-backend/utils"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -14,25 +13,21 @@ import (
 
 var DB *gorm.DB
 
-func Connect() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found, using environment variables")
-	}
+func Connect(cfg *utils.Config) {
 
 	sslMode := "require"
 
-	if utils.GetEnv("GO_ENV", "development") == "development" {
+	if cfg.GoEnv == "developement" {
 		sslMode = "disable"
 	}
 
 	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		utils.GetEnv("DB_HOST", "localhost"),
-		utils.GetEnv("DB_PORT", "5432"),
-		utils.GetEnv("DB_USER", "postgres"),
-		utils.GetEnv("DB_PASSWORD", "postgres"),
-		utils.GetEnv("DB_NAME", "univapptwopointone"),
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		cfg.DbHost,
+		cfg.DbPort,
+		cfg.DbUser,
+		cfg.DbPassword,
+		cfg.DbName,
 		sslMode,
 	)
 
@@ -41,7 +36,7 @@ func Connect() {
 		Logger:      logger.Default.LogMode(logger.Silent),
 	}
 
-	DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
+	DB, err := gorm.Open(postgres.Open(dsn), gormConfig)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -51,10 +46,10 @@ func Connect() {
 		log.Fatal("Failed to get database instance:", err)
 	}
 
-	sqlDB.SetMaxOpenConns(utils.AtoiEnv("DB_MAX_OPEN_CONNS", 10))
-	sqlDB.SetMaxIdleConns(utils.AtoiEnv("DB_MAX_IDLE_CONNS", 10))
-	sqlDB.SetConnMaxLifetime(time.Duration(utils.AtoiEnv("DB_MAX_LIFETIME", 1)) * time.Minute)
-	sqlDB.SetConnMaxIdleTime(time.Duration(utils.AtoiEnv("DB_MAX_IDLE_TIME", 1)) * time.Minute)
+	sqlDB.SetMaxOpenConns(cfg.DbMaxOpenConn)
+	sqlDB.SetMaxIdleConns(cfg.DbMaxIdleConn)
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.DbConnMaxLifeTime) * time.Minute)
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.DbConnMaxIdleTime) * time.Minute)
 
 	if err := sqlDB.Ping(); err != nil {
 		log.Fatal("Failed to ping database:", err)
