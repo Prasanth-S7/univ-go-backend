@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/Prasanth-S7/univ-go-backend/db"
@@ -165,7 +164,7 @@ func (h *Handler) LoginHandler(c *fiber.Ctx) error {
 
 	//check if jwt secret key is present
 
-	jwtKey := os.Getenv("JWT_KEY")
+	jwtKey := h.Cfg.JwtKey
 	if jwtKey == "" {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Internal Server Error: JWT Key not found",
