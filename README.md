@@ -1,11 +1,33 @@
-# To get the dump of the database
-docker exec -t univ-postgres pg_dump -U postgres -d univapptwopointone -F c -f /tmp/mydb.backup
+# Univ App Go Backend
 
-docker cp univ-pg-test:/tmp/mydb.backup ./mydb.backup
+![Go Version](https://img.shields.io/badge/Go-1.25.5-blue?style=flat-square&logo=go)
+![Docker](https://img.shields.io/badge/Docker-Supported-blue?style=flat-square&logo=docker)
 
-# To restore the dump of the database
-docker exec -t univ-postgres pg_restore -U postgres -d univapptwopointone /tmp/mydb.backup
+This is the Go-based backend service for the Univ App ecosystem. It is designed to run in a containerized environment, connecting to PostgreSQL via PgBouncer.
 
-# To generate sha 256 scram for userlist.txt
+---
 
-docker exec -it univ-postgres psql -U postgres -c "SELECT rolpassword FROM pg_authid WHERE rolname='postgres';"
+## Prerequisites
+
+Before starting, ensure you have the following installed:
+* [Docker](https://www.docker.com/get-started)
+* [Docker Compose](https://docs.docker.com/compose/install/)
+
+---
+
+## Getting Started
+
+### 1. Environment Configuration
+The application requires an `.env` file to manage database credentials and server settings. 
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+```
+
+### 2. Start the applicaition
+
+```bash
+# Start the docker container
+docker compose -up -d --build
+```
