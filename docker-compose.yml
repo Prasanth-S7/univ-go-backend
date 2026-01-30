@@ -10,6 +10,15 @@ volumes:
   prometheus-data:
 
 services:
+  univ-go:
+    build: .
+    ports:
+      - "4500:4500"
+    networks:
+      - univ-network
+    depends_on:
+      - pgbouncer
+
   postgres:
     image: postgres:17
     container_name: univ-postgres
